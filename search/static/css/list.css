@@ -1,0 +1,63 @@
+#left-col-title{
+  background-color: #12bbad;
+  padding: 5px 5px;
+}
+.nav, .pagination{
+  margin-top:5px;
+}
+.table {
+  margin-bottom: 0;
+}
+.table span, .table p{
+  font-size: 12px;
+}
+.table .check-detail{
+  padding: 2px;
+}
+.btn-check-now {
+  margin-bottom: 30px;
+}
+.statistic-num{
+  flex-wrap: nowrap;
+}
+/* 不超过两行的详情样式 */
+.two-lines {
+  overflow : hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+p.two-lines {
+  position: relative;
+  line-height: 1.5em;
+  /* 高度为需要显示的行数*行高，比如这里我们显示两行，则为3 */
+  height: 3em;
+  overflow: hidden;
+}
+p.two-lines: after {
+  content: "...";
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  padding: 0 5px;
+  background-color: #fff;
+}
+/* 不超过两行的详情样式 */
+
+
+.loading {
+    border: 16px solid #f3f3f3; /* Light grey */
+    border-top: 16px solid #12bbad; /* optional Blue #3498db */
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    animation: spin 2s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

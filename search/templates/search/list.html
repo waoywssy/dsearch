@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% load static%}
+  <link rel="stylesheet" href="{% static "/css/" %}theme.css" type="text/css">
+<!--   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/gijgo@1.9.6/css/gijgo.min.css" rel="stylesheet" type="text/css" /> -->
+  <link rel="stylesheet" href="{% static "/css/" %}font-awesome.min.css" type="text/css">
+  <link rel="stylesheet" href="{% static "/css/" %}gijgo.min.css" type="text/css">
+  <link rel="stylesheet" href="{% static "/css/" %}list.css" type="text/css">
+</head>
+<body>
+  <div class="py-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-3">
+          <h4 class="text-center" id="left-col-title">数据分类</h4>
+          <div class="loading"></div>
+          <div id="tree"></div>
+        </div>
+        <div class="col-md-9">
+          <div class="input-group mb-3">
+            <input type="text" class="form-control" placeholder="请输入搜索内容" aria-describedby="search" id="search-input">
+            <div class="input-group-append">
+              <span class="input-group-text" id="search">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-3"><circle cx="10.5" cy="10.5" r="7.5"></circle><line x1="21" y1="21" x2="15.8" y2="15.8"></line></svg>
+              </span>
+            </div>
+          </div>
+          <ul class="nav nav-pills d-flex justify-content-end align-items-center">
+            <div class="mr-auto">
+              <span class="justify-content-start">共找到<span class="sp-total" id="result-number">0</span>个数据源</span>
+            </div>
+            <li class="nav-item">
+              <a class="active nav-link" data-toggle="pill" data-target="#tablatest" id="tab-latest">最新</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" data-toggle="pill" data-target="#tablatest" id="tab-hotest">最热</a>
+            </li>
+          </ul>
+          <div class="tab-content mt-2">
+            <div class="tab-pane fade show active" id="tablatest" role="tabpanel">
+              <div class="list-group" id="div-list-latest-items">
+                  <div class="loading"></div>
+              </div>
+            </div>
+          </div>
+          <ul class="pagination justify-content-end" id="pagination">
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% csrf_token %}
+  <script id="listTmpl" type="text/x-jsrender"><%for data%>
+    <li class="list-group-item list-group-item-action flex-column align-items-start">
+      <table class="table">
+        <tr>
+          <td class=""><img src="http://via.placeholder.com/100x100"></td>
+          <td class="">
+            <h6><%:title %></h6>
+            <p class="two-lines"><%:description%></p>
+            <span>来源：<%:source%></span>&nbsp;&nbsp;<span>年份：<%:data_time%></span>&nbsp;&nbsp;<span>发布时间：<%:publish_time%></span>
+          </td>
+          <td class="align-bottom check-detail">
+            <div class="text-center">
+              <a href="./item/<%:id%>" target="_blank"><button class="btn btn-info btn-check-now">立即查看</button></a>
+            </div>
+            <div class="text-nowrap">
+              <i class="fa fa-eye" aria-hidden="true"></i>&nbsp;<span><%:readhot%></span>&nbsp;&nbsp;<i class="fa fa-download" aria-hidden="true"></i>&nbsp;<span><%:downloads%></span>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </li><%/for%>
+  </script>
+  <!-- 
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gijgo@1.9.6/js/gijgo.min.js"></script>
+  <script type="text/javascript" src="https://cdn.bootcss.com/twbs-pagination/1.4.1/jquery.twbsPagination.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/0.9.90/jsrender.min.js"></script> 
+  -->
+  <script type="text/javascript" src="{% static "/js/" %}jquery-3.3.1.min.js"></script>
+  <script type="text/javascript" src="{% static "/js/" %}popper.min.js"></script>
+  <script type="text/javascript" src="{% static "/js/" %}bootstrap.min.js"></script>
+  <script type="text/javascript" src="{% static "/js/" %}gijgo.min.js"></script>
+  <script type="text/javascript" src="{% static "/js/" %}jsrender.min.js"></script>
+  <script type="text/javascript" src="{% static "/js/" %}jquery.twbsPagination.min.js"></script>
+  <script type="text/javascript" src="{% static "/js/" %}csrf.js"></script>
+  <script type="text/javascript" src="{% static "/js/" %}list.js"></script>
+</body>
+</html>

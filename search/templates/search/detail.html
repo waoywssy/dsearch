@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% load static%}
+  <link rel="stylesheet" href="{% static "/css/" %}theme.css" type="text/css">
+  <link rel="stylesheet" href="{% static "/css/" %}font-awesome.min.css" type="text/css">
+  <link rel="stylesheet" href="{% static "/css/" %}item.css" type="text/css">
+</head>
+<body>
+  <div class="py-5">
+    <div class="container">
+      <div class="row">
+        <div class="col detail-preview text-center">
+          <img src="http://via.placeholder.com/400x400">
+          <div class="text-nowrap">
+            <i class="fa fa-eye" aria-hidden="true"></i>&nbsp;<span>{{ readhot }}</span>&nbsp;&nbsp;
+            <i class="fa fa-download" aria-hidden="true"></i>&nbsp;<span>{{ downloads }}</span>&nbsp;&nbsp;
+            <i class="fa fa-share-square-o" aria-hidden="true"></i>&nbsp;<span><del>分享</del></span>&nbsp;&nbsp;
+            <i class="fa fa-pencil-square-o" aria-hidden="true"></i>&nbsp;<span><del>编辑图表</del></span>
+          </div>
+        </div>
+        <div class="col detail">
+          <h3>{{ title }}</h3>
+          <p class="h6">{{ contents }}</p>
+          <div><h1>￥{{ price }}</h1></div>
+          <div>权限:&nbsp;&nbsp;<button class="btn btn-sm btn-primary">高级用户</button>&nbsp;&nbsp;<a href="#">还不是高级会员？点击get下载权限</a></div>
+          <table class="table detail-table">
+            <tr><td>来源：<span>{{ source }}</span></td><td>标签：<span>{{ keywords }}</span></td></tr>
+            <tr><td>年份：<span>{{ data_time }}</span></td><td>更新时间：<span id="publish_time">{{ publish_time }}</span></td></tr>
+          </table>
+          <div>下载：
+            <button class="btn btn-primary"><i class="fa fa-file-excel-o" aria-hidden="true"></i>&nbsp;XLS</button>&nbsp;&nbsp;
+            <button class="btn btn-primary" disabled><i class="fa fa-picture-o" aria-hidden="true"></i>&nbsp;PNG</button>
+          </div>
+        </div>
+      </div>
+      <div class="spliter"></div>
+
+      {% if ref_id %}
+      <div class="row">
+        <div class="col">
+          <h5>该数据来源于以下数据包</h5>
+          <a href='/index/item/{{ ref_id }}' target="_blank">{{ ref_id_title }}</a>
+        </div>
+        <div class="col">
+        </div>
+        <div class="col">
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="spliter"></div>
+      <h5>浏览该页面的用户还浏览了</h5>
+      <div class="row other-users-viewed">
+        <div>
+          <img src="http://via.placeholder.com/150x150"><br>
+          <a href="#" title="2011年7月1日中国社会保险缴费按职工和雇主的分摊方式分摊1">2011年7月1日中国社会保险缴费按职工和雇主的分摊方式分摊1</a>
+        </div>
+        <div>
+          <img src="http://via.placeholder.com/150x150"><br>
+          <a href="#" title="2011年7月1日中国社会保险缴费按职工和雇主的分摊方式分摊2">2011年7月1日中国社会保险缴费按职工和雇主的分摊方式分摊2</a>
+        </div>
+        <div>
+          <img src="http://via.placeholder.com/150x150"><br>
+          <a href="#" title="2011年7月1日中国社会保险缴费按职工和雇主的分摊方式分摊3">2011年7月1日中国社会保险缴费按职工和雇主的分摊方式分摊3</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% csrf_token %}
+  <script type="text/javascript" src="{% static "/js/" %}jquery-3.3.1.min.js"></script>
+  <script type="text/javascript" src="{% static "/js/" %}popper.min.js"></script>
+  <script type="text/javascript" src="{% static "/js/" %}bootstrap.min.js"></script>
+  <script type="text/javascript" src="{% static "/js/" %}csrf.js"></script>
+  <script type="text/javascript" src="{% static "/js/" %}item.js"></script>
+</body>
+</html>

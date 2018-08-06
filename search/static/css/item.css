@@ -1,0 +1,23 @@
+.spliter {
+  margin-top: 30px;
+}
+.detail div {
+  margin-bottom: 5px;
+}
+.detail div span {
+  margin-right: 15px;
+}
+.detail .detail-table td {
+  border: none;
+  padding-left: 0;
+}
+.detail-preview img {
+  margin-bottom: 5px;
+}
+.other-users-viewed div {
+	width: 180px;
+	margin: 10px;
+	white-space: nowrap; 
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
