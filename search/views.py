@@ -61,7 +61,7 @@ def item(request, id):
       'publish_time': hit.publish_time, 
       'readhot': hit.readhot,
       'downloads': hit.downloads,
-      'ref_id': hit.ref_id,
+      'ref_id': str(hit.ref_id),
       'ref_id_title': ref_id_title,
       'recommends': recommends
     }
@@ -75,8 +75,7 @@ def getRefIdTitle(id):
   body = {
     "query":{
       "term":{
-            "id": ids
-            # "id": ids.__str__()
+            "id": id
          }
     }
   }
@@ -99,11 +98,9 @@ def getRecommendedIdTitles(ids):
       }
     }
     response = doSearch(body)
-    # print(response.to_dict())
 
     if len(response.hits) > 0:
       hit_list = []
-      # for bucket in response.aggs.bucket:
       for hit in response.hits:
         hit_list.append({
           'id': str(hit.id),
