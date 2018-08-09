@@ -16,7 +16,6 @@ def search(request):
 def item(request, id):
   # handle id here
   # TODO
-
   body = {
     "query":{
       "term":{
@@ -24,7 +23,13 @@ def item(request, id):
          }
     }
   }
+
   response = doSearch(body)
+
+
+
+  # call method
+  
 
   params = {}
   if len(response.hits) > 0:
@@ -72,6 +77,77 @@ def getRefIdTitle(id):
     raise Http404("Ref title not found.")
 
 
+def makeUpFilterList(filterList):
+  # "1-传播,1-传播-1-媒体,1-传播-2-媒体测试,2-商业-1-贸易,3-民生,3-民生-1-社保,3-民生-2-社保测试"
+  madeUpList = []
+  fList = str.split(',')
+
+  currentDomain = ''
+
+  for item in fList:
+    arr = item.split('-')
+    currentDomain = arr[1]
+
+    if len(arr) == 2:
+      madeUpList.append(item)
+    elif len(arr) == 4:
+      madeUpList.append(item)
+
+  return filterList
+
+
+def getESQueryFromChecked(filterList, mustQuery):
+
+  if len(filterList) == 0:
+    return {"bool": {"must": mustQuery} }
+
+  # "1-传播,1-传播-1-媒体,1-传播-2-媒体测试,2-商业,2-商业-1-贸易,3-民生,3-民生-1-社保,3-民生-2-社保测试"
+  str = formatFilterList(filterList)
+  fList = str.split(',')
+  should = []
+  must = []
+  industry_should = []
+  for item in fList:
+    arr = item.split('-')
+
+    if len(arr) == 2:
+      if len(must) > 0:
+        should.append({"bool": {"must": must, "should": industry_should, "minimum_should_match": 1}})
+      must = []
+      industry_should = []
+      must.append({"term": {"domain" : arr[1]}})
+    elif len(arr) == 4:
+      industry_should.append({"term": {"industry" : arr[3]}})
+  should.append({"bool": {"must": must, "should": industry_should , "minimum_should_match": 1}})
+
+  return {"bool": {"must": mustQuery, "should": should, "minimum_should_match": 1 } }
+
+
+def formatFilterList(filterList):
+  # "1-传播,1-传播-1-媒体,1-传播-2-媒体测试,2-商业-1-贸易,3-民生,3-民生-1-社保,3-民生-2-社保测试"
+  fList = filterList.split(',')
+
+  result = []
+
+  currentDomain = ''
+  index = 0
+  for item in fList:
+    # print(item)
+    arr = item.split('-')
+    if len(arr) == 4:
+      if index == 0:
+        # if the first item is industry
+        currentDomain = '-'.join([arr[0], arr[1]])
+        result.append(currentDomain)
+      elif currentDomain != arr[1]:
+        currentDomain = '-'.join([arr[0], arr[1]])
+        result.append(currentDomain)
+
+    result.append(item)
+    currentDomain = arr[1]
+    index = index + 1
+  return ','.join(result)
+
 
 def doSearch(body):
   client = connections.create_connection(hosts=['http://localhost:9200'])
@@ -85,16 +161,17 @@ def doSearch(body):
 
 # 404 page handler
 def handler404(request, exception):
-    return render(request, 'search/404.html', locals())
+  return render(request, 'search/404.html', locals())
 
-# get the filter tree 
+# the search API, handle the search request
+# and get the filter tree 
 def getree(request):
   start = time.clock()
 
   # get the posted keywords
   keyword = request.POST.get('keyword', '')
   pageNo = request.POST.get('pageNo', '')
-  filterList = request.POST.get('filterList', '')  
+  filterList = request.POST.get('filterList', '')
   orderby_val = int(request.POST.get('orderby', ''))
 
   orderby = ["readhot", "publish_time"]
@@ -105,7 +182,7 @@ def getree(request):
   if len(keyword.strip()) > 0:
     # query for keywords
     query = {
-      "multi_match":{
+      "multi_match": {
         "query": keyword, 
         # "type": "best_fields", 
         "fields": [ 
@@ -126,8 +203,10 @@ def getree(request):
       "match_all":{}
     }
 
+  boolBody = getESQueryFromChecked(filterList, query)
+
   body = {
-    "query": query,
+    "query": boolBody,
     "from": start_from, 
     "size": 10, 
     "sort" : [
@@ -139,6 +218,7 @@ def getree(request):
         "terms": {
           "field": "domain.keyword",
           "size": 999,
+          "min_doc_count":0,
           "order": {
             "_key": "asc"
           }
@@ -193,27 +273,31 @@ def getree(request):
     for child in bucket.industry_stats.buckets:
       child_index = child_index + 1
       children.append({
-        # 'checked': False,
-        'key': ''.join([str(parent_index), "-", str(child_index), "-", child.key]), 
-        'count': child.doc_count,
-        'text': child.key + '(' + str(child.doc_count) + ')',
-        'checked': True,
+        'key': ''.join([str(parent_index), "-", str(bucket.key), "-", str(child_index), "-", child.key]), 
+        # 'text': child.key + '(' + str(child.doc_count) + ')',
+        'checked': child.doc_count > 0,
+        'title': child.key,
+        'count': child.doc_count
       })
+    # parents nodes
     group_list.append({
-      # 'checked': False,
       'key': ''.join([str(parent_index), "-", bucket.key]), 
       'count': bucket.doc_count,
-      'text': bucket.key + '(' + str(bucket.doc_count) + ')',
-      'checked': True,
+      # 'text': bucket.key + '(' + str(bucket.doc_count) + ')',
+      'title': bucket.key,
+      'expand': False,
       'hasChildren':len(children) > 0,
       'children': children
     })
+
 
   end = time.clock()
 
   responseData = {
     'code': 200,
     'message': 'OK',
+    'query': filterList,
+    'body': body,
     'took': response.took,
     'time': end - start,
     'data': {
@@ -224,50 +308,6 @@ def getree(request):
 
   return JsonResponse(responseData)
   # return JsonResponse(response.to_dict())
-
-
-
-def json(request):
-  # get the posted keywords
-  keyword = request.POST.get('keyword', '')
-  pageNo = request.POST.get('pageNo', '')
-  filterList = request.POST.get('filterList', '')
-  orderby = request.POST.get('orderby', '')
-
-  client = Elasticsearch()
-  s = Search(using=client, index="search_engine_data").query("match", domain=keyword).extra(size=10)
-
-  # s = Search().sort(
-  #   'category',
-  #   '-title',
-  #   {"lines": {"order": "asc", "mode": "avg"}}
-  # )
-
-  # 按照title升序，内容降序排列
-  # s = s.sort('jks_title', '-jks_content')
-  # for pagination; from value is 10, size value is 10
-  s = s[0:10]
-
-  response = s.execute()
-
-  list = []
-  for hit in response:
-    list.append({'title': hit.jks_title, 'content': hit.jks_content})
-
-  postdata = ''
-  if request.method == "GET":
-    postdata = request.GET.get("name", "")
-
-  responseData = {
-    'code': 200,
-    'message': 'OK',
-    'data': list,
-    'total': s.count(),
-    'postdata': postdata
-  }
-  return JsonResponse(responseData)
-
-
 
 
 

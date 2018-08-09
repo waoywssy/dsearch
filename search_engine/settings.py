@@ -64,7 +64,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            BASE_DIR + '/blog/templates/search/',
+            BASE_DIR + '/search/templates/search/',
         ],
         'APP_DIRS': True,
         'OPTIONS': {
