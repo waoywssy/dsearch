@@ -4,13 +4,20 @@ from elasticsearch_dsl.connections import connections
 
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
+
+from search.suggestion import History, Suggest
+from search.suggestion import saveHistory, getSuggestions
+from search.models import Datastore
+
 import time
+import datetime
 
 from django.http import Http404
 
 # Render the list page
 def search(request):
-	return render(request, 'search/list.html', {})
+  # print('detail:' + request.session['ids'].__str__())
+  return render(request, 'search/list.html', {})
 
 # Render the search-result detail page
 def item(request, id):
@@ -26,10 +33,12 @@ def item(request, id):
 
   response = doSearch(body)
 
-
-
   # call method
-  
+  request = saveHistory(request, id)
+
+  # 获取推荐 id 测试
+  suggestIds = getSuggestions(id, 5, 3)
+  recommends = getRecommendedIdTitles(suggestIds)
 
   params = {}
   if len(response.hits) > 0:
@@ -41,7 +50,7 @@ def item(request, id):
       ref_id_title = getRefIdTitle(hit.ref_id)
 
     params = {
-      'id': hit.id, 
+      'id': str(hit.id), 
       'keywords': hit.keywords,
       'title': hit.title, 
       'contents': hit.contents, 
@@ -53,7 +62,8 @@ def item(request, id):
       'readhot': hit.readhot,
       'downloads': hit.downloads,
       'ref_id': hit.ref_id,
-      'ref_id_title': ref_id_title
+      'ref_id_title': ref_id_title,
+      'recommends': recommends
     }
   else:
     raise Http404("Item not found.")
@@ -65,7 +75,8 @@ def getRefIdTitle(id):
   body = {
     "query":{
       "term":{
-            "id": id
+            "id": ids
+            # "id": ids.__str__()
          }
     }
   }
@@ -76,6 +87,31 @@ def getRefIdTitle(id):
   else:
     raise Http404("Ref title not found.")
 
+
+# get what other users viewed 
+def getRecommendedIdTitles(ids):
+  if ids and len(ids) > 0:
+    body = {
+      "query":{
+        "terms":{
+              "id": ids
+           }
+      }
+    }
+    response = doSearch(body)
+    # print(response.to_dict())
+
+    if len(response.hits) > 0:
+      hit_list = []
+      # for bucket in response.aggs.bucket:
+      for hit in response.hits:
+        hit_list.append({
+          'id': str(hit.id),
+          'title': hit.title
+        })
+      return hit_list
+  # no match
+  return []
 
 def makeUpFilterList(filterList):
   # "1-传播,1-传播-1-媒体,1-传播-2-媒体测试,2-商业-1-贸易,3-民生,3-民生-1-社保,3-民生-2-社保测试"
@@ -252,13 +288,12 @@ def getree(request):
   # for bucket in response.aggs.bucket:
   for hit in response.hits:
     hit_list.append({
-      'id': hit.id, 
-      # 'doc_id': hit.meta.id,
-      'title': hit.title, 
-      'description': hit.description, 
-      'source': hit.source, 
-      'data_time': hit.data_time, 
-      'publish_time': hit.publish_time, 
+      'id': str(hit.id),
+      'title': hit.title,
+      'description': hit.description,
+      'source': hit.source,
+      'data_time': hit.data_time,
+      'publish_time': hit.publish_time,
       'readhot': hit.readhot,
       'downloads': hit.downloads
     })

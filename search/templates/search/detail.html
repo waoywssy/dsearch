@@ -44,29 +44,25 @@
           <h5>该数据来源于以下数据包</h5>
           <a href='/index/item/{{ ref_id }}' target="_blank">{{ ref_id_title }}</a>
         </div>
-        <div class="col">
-        </div>
-        <div class="col">
-        </div>
+        <div class="col"></div>
+        <div class="col"></div>
       </div>
       {% endif %}
 
       <div class="spliter"></div>
+
+      {% if recommends %}
       <h5>浏览该页面的用户还浏览了</h5>
       <div class="row other-users-viewed">
+        {% for recommend in recommends %}
         <div>
           <img src="http://via.placeholder.com/150x150"><br>
-          <a href="#" title="2011年7月1日中国社会保险缴费按职工和雇主的分摊方式分摊1">2011年7月1日中国社会保险缴费按职工和雇主的分摊方式分摊1</a>
+          <a href="/index/item/{{ recommend.id }}" target="_blank" title="{{recommend.title}}">{{recommend.title}}</a>
         </div>
-        <div>
-          <img src="http://via.placeholder.com/150x150"><br>
-          <a href="#" title="2011年7月1日中国社会保险缴费按职工和雇主的分摊方式分摊2">2011年7月1日中国社会保险缴费按职工和雇主的分摊方式分摊2</a>
-        </div>
-        <div>
-          <img src="http://via.placeholder.com/150x150"><br>
-          <a href="#" title="2011年7月1日中国社会保险缴费按职工和雇主的分摊方式分摊3">2011年7月1日中国社会保险缴费按职工和雇主的分摊方式分摊3</a>
-        </div>
+        {% endfor %}
       </div>
+      {% endif %}
+
     </div>
   </div>
   {% csrf_token %}
