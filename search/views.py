@@ -7,7 +7,7 @@ from django.shortcuts import render
 from django.conf import settings
 from django.utils.dateparse import parse_datetime
 
-from search.suggestion import History, Suggest, saveHistory, getSuggestions
+from search.suggestion import History, Suggest, saveHistory, getSuggestions, countDownloads
 from search.models import Datastore
 
 import time, datetime, requests, json 
@@ -21,16 +21,21 @@ def search(request):
 # Update downloads count
 def update(request):
   meta_id = request.POST.get('meta_id', '')
+  id = request.POST.get('id', '')
+
+  responseData = {
+    'code': 200,
+    'message': 'OK',
+  }
 
   if meta_id:
     try:
       updateFieldCount(meta_id, 'downloads')
-      responseData = {
-        'code': 200,
-        'message': 'OK',
-      }
+
+      countDownloads(id)
+
     except Exception as e:
-      pass
+      print(e)
     finally:
       pass
   else:

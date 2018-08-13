@@ -62,14 +62,18 @@ $(function() {
 
     saveFilterStatus();
 
+    var k = $('#search-input').val().trim();
+    var filter_vals = (k == '' && last_keyword != '') ? '' : checkedNodes.join();
+
+
     $.ajax({
       type: "POST",
       url: "tree",
       dataType: 'json',
       data: { 
-        keyword: $('#search-input').val().trim(),
+        keyword: k,
         pageNo: currentPage,
-        filterList: checkedNodes.join(),
+        filterList: filter_vals,
         orderby: order_by_latest
       }
     })
@@ -93,20 +97,22 @@ $(function() {
           page_first_loaded = false;
           
           tree.checkAll();
+
         } else {
-          var keyword = $('#search-input').val().trim();
-          if (keyword == '' || last_keyword != keyword) {
+          var keyword = $('#search-input').val().replace(/\s+/g, "");
+
+          if (last_keyword != keyword) {
             // build the tree filter
             buildFilter(filter);
             last_keyword = keyword;
-          }
+          } 
         }
 
         // rebuild the pagination according to the number of search results
         var pages = Math.ceil(list.total / 10);
 
         $pagination.twbsPagination('destroy');
-        if (pages > 0){
+        if (pages > 0) {
           $pagination.twbsPagination($.extend({}, defaultOpts, {
             startPage: currentPage,
             totalPages: pages,

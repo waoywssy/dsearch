@@ -6,7 +6,8 @@ $(function() {
       url: "/index/update",
       dataType: 'json',
       data: { 
-        meta_id: $("#meta_id").val()
+        meta_id: $("#meta_id").val(),
+        id: $("#id").val()
       }
     })
     .done(function(r) {

@@ -7,6 +7,8 @@
 }
 .table {
   margin-bottom: 0;
+/*  table-layout: fixed;
+  width: 100%;*/
 }
 .table span, .table p{
   font-size: 12px;
@@ -60,4 +62,8 @@ p.two-lines: after {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+.list-group-item {
+  overflow-x:auto;
 }

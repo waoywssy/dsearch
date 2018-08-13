@@ -11,6 +11,9 @@
   border: none;
   padding-left: 0;
 }
+.detail-preview {
+  margin-bottom: 15px;
+}
 .detail-preview img {
   margin-bottom: 5px;
 }

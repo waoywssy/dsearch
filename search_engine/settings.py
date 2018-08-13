@@ -29,11 +29,13 @@ if DEBUG is False:
     ALLOWED_HOSTS = [
         '127.0.0.1:8000',
         'localhost:8000',
-        '*',
+        '*'
     ]
 
 if DEBUG is True:
-    ALLOWED_HOSTS = []
+    ALLOWED_HOSTS = [
+    # '20df829f.ngrok.io'
+    ]
 
 
 # Application definition

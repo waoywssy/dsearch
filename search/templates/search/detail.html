@@ -24,12 +24,19 @@
         <div class="col detail">
           <h3>{{ title }}</h3>
           <p class="h6">{{ contents }}</p>
+          <input type="hidden" value="{{ id }}" name="id" id="id" />
           <input type="hidden" value="{{ meta_id }}" name="meta_id" id="meta_id" />
           <div><h1>￥{{ price }}</h1></div>
-          <div>权限:&nbsp;&nbsp;<button class="btn btn-sm btn-primary">高级用户</button>&nbsp;&nbsp;<a href="#">还不是高级会员？点击get下载权限</a></div>
+          <div>权限:&nbsp;&nbsp;{{ level }}&nbsp;&nbsp;<button class="btn btn-sm btn-primary">高级用户</button>&nbsp;&nbsp;<a href="#">还不是高级会员？点击get下载权限</a></div>
           <table class="table detail-table">
             <tr><td>来源：<span>{{ source }}</span></td><td>标签：<span>{{ keywords }}</span></td></tr>
-            <tr><td>年份：<span>{{ data_time }}</span></td><td>更新时间：<span id="publish_time">{{ publish_time }}</span></td></tr>
+            <tr>
+              <td>年份：<span>{{ data_time }}</span></td>
+              <td>更新时间：<span id="publish_time">{{ publish_time }}</span></td>
+            </tr>
+            <!-- <tr>
+              <td>更新时间：<span id="publish_time">{{ publish_time }}</span></td>
+            </tr> -->
           </table>
           <div>下载：
             <button class="btn btn-primary" id="btn-download-xls"><i class="fa fa-file-excel-o" aria-hidden="true"></i>&nbsp;XLS</button>&nbsp;&nbsp;
