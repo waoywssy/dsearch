@@ -2,17 +2,15 @@ from elasticsearch import Elasticsearch
 from elasticsearch_dsl import Search, A, FacetedSearch, TermsFacet, DateHistogramFacet
 from elasticsearch_dsl.connections import connections
 
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, Http404
 from django.shortcuts import render
+from django.conf import settings
 
-from search.suggestion import History, Suggest
-from search.suggestion import saveHistory, getSuggestions
+from search.suggestion import History, Suggest, saveHistory, getSuggestions
 from search.models import Datastore
 
-import time
-import datetime
+import time, datetime, requests, json 
 
-from django.http import Http404
 
 # Render the list page
 def search(request):
@@ -22,7 +20,7 @@ def search(request):
 # Render the search-result detail page
 def item(request, id):
   # handle id here
-  # TODO
+  # TODO 
   body = {
     "query":{
       "term":{
@@ -37,7 +35,7 @@ def item(request, id):
   request = saveHistory(request, id)
 
   # 获取推荐 id 测试
-  suggestIds = getSuggestions(id, 5, 3)
+  suggestIds = getSuggestions(id, 3, 3)
   recommends = getRecommendedIdTitles(suggestIds)
 
   params = {}
@@ -52,7 +50,7 @@ def item(request, id):
     params = {
       'id': str(hit.id), 
       'keywords': hit.keywords,
-      'title': hit.title, 
+      'title': hit.title + hit.meta.id, 
       'contents': hit.contents, 
       'price': hit.price, 
       'level': hit.level, 
@@ -61,14 +59,27 @@ def item(request, id):
       'publish_time': hit.publish_time, 
       'readhot': hit.readhot,
       'downloads': hit.downloads,
-      'ref_id': str(hit.ref_id),
+      'ref_id': str(hit.ref_id), 
       'ref_id_title': ref_id_title,
       'recommends': recommends
     }
+
+    updateReadCount(hit.meta.id)
+
   else:
     raise Http404("Item not found.")
 
   return render(request, 'search/detail.html', params)
+
+
+def updateReadCount(es_id):
+  # url = 'http://127.0.0.1:9200/datastore/doc/8tiNEmUBw7RIvfsV9-Cj/_update'
+  url = '/'.join([settings.ES_URL, settings.ES_INDEX_NAME, settings.ES_INDEX_TYPE, es_id, '_update'])
+  data = {"script":{"inline":"ctx._source.readhot += 1"}}
+  headers = {'Content-Type': 'application/json'}
+  response = requests.post(url=url, headers=headers, data=json.dumps(data)) 
+  # print(response.to_dict())
+
 
 # get the title according to the id
 def getRefIdTitle(id):
@@ -85,7 +96,6 @@ def getRefIdTitle(id):
     return response.hits[0].title
   else:
     raise Http404("Ref title not found.")
-
 
 # get what other users viewed 
 def getRecommendedIdTitles(ids):
@@ -183,11 +193,11 @@ def formatFilterList(filterList):
 
 
 def doSearch(body):
-  client = connections.create_connection(hosts=['http://localhost:9200'])
-  s = Search(using=client, index="datastore", doc_type="doc")
+  client = connections.create_connection(hosts=[settings.ES_URL])
+  s = Search(using=client, index=settings.ES_INDEX_NAME, doc_type=settings.ES_INDEX_TYPE)
   s = Search.from_dict(body)
-  s = s.index("datastore")
-  s = s.doc_type("doc")
+  s = s.index(settings.ES_INDEX_NAME)
+  s = s.doc_type(settings.ES_INDEX_TYPE)
   body = s.to_dict()
   response = s.execute()
   return response

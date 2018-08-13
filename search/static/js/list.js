@@ -74,7 +74,7 @@ $(function() {
       }
     })
     .done(function(r) {
-      
+
       $('.loading').hide();
 
       if (r.code == 200){
@@ -95,7 +95,7 @@ $(function() {
           tree.checkAll();
         } else {
           var keyword = $('#search-input').val().trim();
-          if (last_keyword != keyword) {
+          if (keyword == '' || last_keyword != keyword) {
             // build the tree filter
             buildFilter(filter);
             last_keyword = keyword;

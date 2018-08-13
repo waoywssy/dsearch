@@ -146,3 +146,18 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 # set session validate time
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+
+# global settings of the elasticsearch service
+ES_URL = 'http://localhost:9200'
+ES_INDEX_NAME = 'datastore'
+ES_INDEX_TYPE = 'doc'
+
+
+
+
+
+
+
+
+
