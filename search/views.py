@@ -5,6 +5,7 @@ from elasticsearch_dsl.connections import connections
 from django.http import JsonResponse, HttpResponse, Http404
 from django.shortcuts import render
 from django.conf import settings
+from django.utils.dateparse import parse_datetime
 
 from search.suggestion import History, Suggest, saveHistory, getSuggestions
 from search.models import Datastore
@@ -16,6 +17,30 @@ import time, datetime, requests, json
 def search(request):
   # print('detail:' + request.session['ids'].__str__())
   return render(request, 'search/list.html', {})
+
+# Update downloads count
+def update(request):
+  meta_id = request.POST.get('meta_id', '')
+
+  if meta_id:
+    try:
+      updateFieldCount(meta_id, 'downloads')
+      responseData = {
+        'code': 200,
+        'message': 'OK',
+      }
+    except Exception as e:
+      # raise
+    finally:
+      pass
+  else:
+    responseData = {
+      'code': 200,
+      'message': 'NO MATCHED ID FOUND',
+    }
+
+  return JsonResponse(responseData)
+
 
 # Render the search-result detail page
 def item(request, id):
@@ -49,14 +74,15 @@ def item(request, id):
 
     params = {
       'id': str(hit.id), 
+      'meta_id': hit.meta.id,
       'keywords': hit.keywords,
-      'title': hit.title + hit.meta.id, 
+      'title': hit.title, 
       'contents': hit.contents, 
       'price': hit.price, 
       'level': hit.level, 
       'source': hit.source, 
       'data_time': hit.data_time, 
-      'publish_time': hit.publish_time, 
+      'publish_time': dateFormat(hit.publish_time), 
       'readhot': hit.readhot,
       'downloads': hit.downloads,
       'ref_id': str(hit.ref_id), 
@@ -64,21 +90,36 @@ def item(request, id):
       'recommends': recommends
     }
 
-    updateReadCount(hit.meta.id)
+    updateFieldCount(hit.meta.id, 'readhot')
 
   else:
     raise Http404("Item not found.")
 
   return render(request, 'search/detail.html', params)
 
+def dateFormat(date_str):
+  try:
+    result = parse_datetime(date_str).strftime("%Y-%m-%d %H:%M:%S")
+  except Exception as e:
+    result = date_str
+  finally:
+    pass
+  return result
 
-def updateReadCount(es_id):
+# field - readhot/downloads
+def updateFieldCount(es_id, field):
   # url = 'http://127.0.0.1:9200/datastore/doc/8tiNEmUBw7RIvfsV9-Cj/_update'
   url = '/'.join([settings.ES_URL, settings.ES_INDEX_NAME, settings.ES_INDEX_TYPE, es_id, '_update'])
-  data = {"script":{"inline":"ctx._source.readhot += 1"}}
+  data = {"script":{"inline":"ctx._source." + field +" += 1"}}
   headers = {'Content-Type': 'application/json'}
-  response = requests.post(url=url, headers=headers, data=json.dumps(data)) 
-  # print(response.to_dict())
+  try:
+    response = requests.post(url=url, headers=headers, data=json.dumps(data)) 
+  except Exception as e:
+    raise
+  else:
+    pass
+  finally:
+    return response  
 
 
 # get the title according to the id
@@ -191,7 +232,6 @@ def formatFilterList(filterList):
     index = index + 1
   return ','.join(result)
 
-
 def doSearch(body):
   client = connections.create_connection(hosts=[settings.ES_URL])
   s = Search(using=client, index=settings.ES_INDEX_NAME, doc_type=settings.ES_INDEX_TYPE)
@@ -254,7 +294,8 @@ def getree(request):
     "size": 10, 
     "sort" : [
         { orderby[orderby_val] : {"order" : "desc"}},
-        "_score"
+        "_score",
+        "id"
     ],
     "aggs": {
       "by_domain_industry": {
@@ -300,7 +341,7 @@ def getree(request):
       'description': hit.description,
       'source': hit.source,
       'data_time': hit.data_time,
-      'publish_time': hit.publish_time,
+      'publish_time': dateFormat(hit.publish_time),
       'readhot': hit.readhot,
       'downloads': hit.downloads
     })
@@ -331,7 +372,6 @@ def getree(request):
       'hasChildren':len(children) > 0,
       'children': children
     })
-
 
   end = time.clock()
 
