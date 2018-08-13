@@ -30,7 +30,7 @@ def update(request):
         'message': 'OK',
       }
     except Exception as e:
-      # raise
+      pass
     finally:
       pass
   else:
@@ -103,8 +103,7 @@ def dateFormat(date_str):
   except Exception as e:
     result = date_str
   finally:
-    pass
-  return result
+    return result
 
 # field - readhot/downloads
 def updateFieldCount(es_id, field):
@@ -115,8 +114,6 @@ def updateFieldCount(es_id, field):
   try:
     response = requests.post(url=url, headers=headers, data=json.dumps(data)) 
   except Exception as e:
-    raise
-  else:
     pass
   finally:
     return response  
