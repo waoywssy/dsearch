@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   {% load static%}
   <link rel="stylesheet" href="{% static "/css/" %}theme.css" type="text/css">
   <link rel="stylesheet" href="{% static "/css/" %}font-awesome.min.css" type="text/css">
@@ -13,7 +14,7 @@
     <div class="container">
       <div class="row">
         <div class="col detail-preview text-center">
-          <img src="http://via.placeholder.com/400x400">
+          <img src="http://via.placeholder.com/360x360">
           <div class="text-nowrap">
             <i class="fa fa-eye" aria-hidden="true"></i>&nbsp;<span>{{ readhot }}</span>&nbsp;&nbsp;
             <i class="fa fa-download" aria-hidden="true"></i>&nbsp;<span>{{ downloads }}</span>&nbsp;&nbsp;
@@ -34,9 +35,6 @@
               <td>年份：<span>{{ data_time }}</span></td>
               <td>更新时间：<span id="publish_time">{{ publish_time }}</span></td>
             </tr>
-            <!-- <tr>
-              <td>更新时间：<span id="publish_time">{{ publish_time }}</span></td>
-            </tr> -->
           </table>
           <div>下载：
             <button class="btn btn-primary" id="btn-download-xls"><i class="fa fa-file-excel-o" aria-hidden="true"></i>&nbsp;XLS</button>&nbsp;&nbsp;

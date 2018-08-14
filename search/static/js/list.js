@@ -56,7 +56,7 @@ $(function() {
   });
 
   // the search method 
-  function doSearch(first_executed = false) {
+  function doSearch(first_executed) {
     $('#div-list-latest-items li').remove();
     $('.loading').show();
 
@@ -64,7 +64,6 @@ $(function() {
 
     var k = $('#search-input').val().trim();
     var filter_vals = (k == '' && last_keyword != '') ? '' : checkedNodes.join();
-
 
     $.ajax({
       type: "POST",

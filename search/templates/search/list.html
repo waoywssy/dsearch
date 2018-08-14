@@ -1,23 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   {% load static%}
   <link rel="stylesheet" href="{% static "/css/" %}theme.css" type="text/css">
-<!--   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-  <link href="https://cdn.jsdelivr.net/npm/gijgo@1.9.6/css/gijgo.min.css" rel="stylesheet" type="text/css" /> -->
-  <link rel="stylesheet" href="{% static "/css/" %}font-awesome.min.css" type="text/css">
-  <link rel="stylesheet" href="{% static "/css/" %}gijgo.min.css" type="text/css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+  <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"> -->
+  <link href="https://cdn.jsdelivr.net/npm/gijgo@1.9.6/css/gijgo.min.css" rel="stylesheet" type="text/css" />
+<!--   <link rel="stylesheet" href="{% static "/css/" %}font-awesome.min.css" type="text/css">
+  <link rel="stylesheet" href="{% static "/css/" %}gijgo.min.css" type="text/css"> -->
   <link rel="stylesheet" href="{% static "/css/" %}list.css" type="text/css">
 </head>
 <body>
   <div class="py-5">
-    <div class="container">
+    <div class="container ">
       <div class="row">
         <div class="col-md-3">
           <h4 class="text-center" id="left-col-title">数据分类</h4>
-          <div class="loading"></div>
+          <!-- <div class="loading"></div> -->
           <div id="tree"></div>
         </div>
         <div class="col-md-9">
@@ -29,7 +31,7 @@
               </span>
             </div>
           </div>
-          <ul class="nav nav-pills d-flex justify-content-end align-items-center">
+          <ul class="nav nav-pills d-flex align-items-center">
             <div class="mr-auto">
               <span class="justify-content-start">共找到<span class="sp-total" id="result-number">0</span>个数据源</span>
             </div>
@@ -43,12 +45,11 @@
           <div class="tab-content mt-2">
             <div class="tab-pane fade show active" id="tablatest" role="tabpanel">
               <div class="list-group" id="div-list-latest-items">
-                  <div class="loading"></div>
+                <div class="loading"></div>
               </div>
             </div>
           </div>
-          <ul class="pagination justify-content-end" id="pagination">
-          </ul>
+          <ul class="pagination justify-content-end" id="pagination"></ul>
         </div>
       </div>
     </div>
@@ -56,24 +57,30 @@
   {% csrf_token %}
   <script id="listTmpl" type="text/x-jsrender"><%for data%>
     <li class="list-group-item list-group-item-action flex-column align-items-start">
-      <table class="table">
-        <tr>
-          <td class=""><img src="http://via.placeholder.com/100x100"></td>
-          <td class="">
-            <h6><%:title %></h6>
+      <div class="row">
+        <div class="col-md-2 list-img"><img src="https://via.placeholder.com/100x100"></div>
+        <div class="col-md-8 list-text">
+          <h5><%:title %></h5>
             <p class="two-lines"><%:description%></p>
             <span>来源：<%:source%></span>&nbsp;&nbsp;<span>年份：<%:data_time%></span>&nbsp;&nbsp;<span>发布时间：<%:publish_time%></span>
-          </td>
-          <td class="align-bottom check-detail">
-            <div class="text-center">
-              <a href="./item/<%:id%>" target="_blank"><button class="btn btn-info btn-check-now">立即查看</button></a>
+        </div>
+        <div class="col-md-2 check-detail">
+          <div class="check-detail-content">
+
+              <div class="text-center">
+                <a href="./item/<%:id%>" target="_blank"><button class="btn btn-info btn-check-now">立即查看</button></a>
+              </div>
+
+              <div class="text-nowrap numbers">
+                <span><i class="fa fa-eye" aria-hidden="true"></i>
+                <span><%if readhot > 9999 %>9999+<%else%><%: readhot %><%/if%></span></span>
+                <span><i class="fa fa-download" aria-hidden="true"></i>
+                <span><%if downloads > 9999 %>9999+<%else%><%: downloads %><%/if%></span></span>
+              </div>
+
             </div>
-            <div class="text-nowrap">
-              <i class="fa fa-eye" aria-hidden="true"></i>&nbsp;<span><%:readhot%></span>&nbsp;&nbsp;<i class="fa fa-download" aria-hidden="true"></i>&nbsp;<span><%:downloads%></span>
-            </div>
-          </td>
-        </tr>
-      </table>
+        </div>
+      </div>
     </li><%/for%>
   </script>
   <!-- 

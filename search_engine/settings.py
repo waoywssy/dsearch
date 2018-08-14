@@ -34,7 +34,9 @@ if DEBUG is False:
 
 if DEBUG is True:
     ALLOWED_HOSTS = [
-    # '20df829f.ngrok.io'
+    'localhost',
+    '120d2eda.ngrok.io',
+    '*'
     ]
 
 

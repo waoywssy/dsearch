@@ -15,7 +15,6 @@ import time, datetime, requests, json
 
 # Render the list page
 def search(request):
-  # print('detail:' + request.session['ids'].__str__())
   return render(request, 'search/list.html', {})
 
 # Update downloads count

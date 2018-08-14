@@ -1,8 +1,8 @@
-#left-col-title{
+#left-col-title {
   background-color: #12bbad;
   padding: 5px 5px;
 }
-.nav, .pagination{
+.nav, .pagination {
   margin-top:5px;
 }
 .table {
@@ -10,18 +10,21 @@
 /*  table-layout: fixed;
   width: 100%;*/
 }
-.table span, .table p{
+.list-text {
   font-size: 12px;
 }
-.table .check-detail{
+.table .check-detail {
   padding: 2px;
+  vertical-align: middle;
 }
 .btn-check-now {
   margin-bottom: 30px;
 }
-.statistic-num{
+.statistic-num {
   flex-wrap: nowrap;
 }
+
+
 /* 不超过两行的详情样式 */
 .two-lines {
   overflow : hidden;
@@ -50,13 +53,13 @@ p.two-lines: after {
 
 
 .loading {
-    border: 16px solid #f3f3f3; /* Light grey */
-    border-top: 16px solid #12bbad; /* optional Blue #3498db */
-    border-radius: 50%;
-    width: 120px;
-    height: 120px;
-    animation: spin 2s linear infinite;
-    margin: 0 auto;
+  border: 16px solid #f3f3f3; /* Light grey */
+  border-top: 16px solid #12bbad; /* optional Blue #3498db */
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  animation: spin 2s linear infinite;
+  margin: 0 auto;
 }
 
 @keyframes spin {
@@ -64,6 +67,36 @@ p.two-lines: after {
     100% { transform: rotate(360deg); }
 }
 
-.list-group-item {
-  overflow-x:auto;
+div.numbers {
+  float: left;
+  display: block;
+  width: 100%;
 }
+div.numbers > span {
+  padding-left: 3px;
+  display: block;
+  float: left;
+  width: 50%;
+}
+
+.numbers span{
+  font-size: 12px;
+}
+
+.list-group-item .row > div {
+  padding-bottom: 5px;
+  word-wrap:break-word;
+}
+
+.check-detail-content {
+  width: 100%;
+  height: 100%;
+}
+.text-center{
+  margin-top:20px;
+}
+/*.py-5{
+  width: 1000px;
+}*/
+
+
