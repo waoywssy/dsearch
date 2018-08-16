@@ -157,6 +157,10 @@ ES_URL = 'http://localhost:9200'
 ES_INDEX_NAME = 'datastore'
 ES_INDEX_TYPE = 'doc'
 
+MAX_RESULTS_PAGES_DISPLAYED = 1000
+
+
+
 
 
 

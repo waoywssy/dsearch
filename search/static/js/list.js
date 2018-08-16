@@ -109,6 +109,7 @@ $(function() {
 
         // rebuild the pagination according to the number of search results
         var pages = Math.ceil(list.total / 10);
+        pages = pages > 1000 ? 1000 : pages;
 
         $pagination.twbsPagination('destroy');
         if (pages > 0) {

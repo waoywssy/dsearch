@@ -260,6 +260,11 @@ def getree(request):
 
   orderby = ["readhot", "publish_time"]
 
+  pageNo = int(pageNo)
+  # display no more than 10000 results
+  if pageNo > settings.MAX_RESULTS_PAGES_DISPLAYED:
+    pageNo = settings.MAX_RESULTS_PAGES_DISPLAYED
+
   start_from = (int(pageNo) - 1) * 10;
 
   query = {}
@@ -376,6 +381,10 @@ def getree(request):
 
   end = time.clock()
 
+  list_total = response.hits.total 
+  # if list_total > settings.MAX_RESULTS_PAGES_DISPLAYED:
+  #   list_total = settings.MAX_RESULTS_PAGES_DISPLAYED
+
   responseData = {
     'code': 200,
     'message': 'OK',
@@ -385,7 +394,7 @@ def getree(request):
     'time': end - start,
     'data': {
       'filter': group_list,
-      'list': {'data': hit_list, 'total': response.hits.total}
+      'list': { 'data': hit_list, 'total': list_total }
       }
   }
 

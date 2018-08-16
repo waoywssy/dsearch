@@ -24,7 +24,7 @@ urlpatterns = [
     # url(r'^admin/', admin.site.urls),
     # url(r'^index/', include("search.urls", namespace="search")),	# 添加index，作为访问目录
     path('admin/', admin.site.urls),
-    path('index/', include("search.urls")),	# 添加index，作为访问目录
+    path('', include("search.urls")),	# 添加index，作为访问目录
 ]
 
 # https://docs.djangoproject.com/en/2.0/topics/http/views/#customizing-error-views
