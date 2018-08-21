@@ -239,6 +239,13 @@ def doSearch(body):
   s = Search.from_dict(body)
   s = s.index(settings.ES_INDEX_NAME)
   s = s.doc_type(settings.ES_INDEX_TYPE)
+
+  # hightlight the following fields in the search result
+  s = s.highlight('title')
+  s = s.highlight('description')
+  s = s.highlight('data_time')
+  s = s.highlight('source')
+
   body = s.to_dict()
   response = s.execute()
   return response
@@ -296,6 +303,20 @@ def getree(request):
 
   body = {
     "query": boolBody,
+    # "highlight" : { 
+    #     "pre_tags" : ["<hl>"],
+    #     "post_tags" : ["</hl>"],
+    #     "fields" : { 
+    #         "title": {}, 
+    #         "description": {}
+    #         # "contents": {}, 
+    #         # "keywords": {}, 
+    #         # "industry": {}, 
+    #         # "topic": {}, 
+    #         # "source": {}, 
+    #         # "data_time": {} 
+    #     }
+    # },
     "from": start_from, 
     "size": 10, 
     "sort" : [
@@ -339,14 +360,31 @@ def getree(request):
   # response = s.execute()
 
   hit_list = []
+
   # for bucket in response.aggs.bucket:
   for hit in response.hits:
+    description = hit.description
+    title = hit.title
+    data_time = hit.data_time
+    source = hit.source
+
+    if len(keyword.strip()) > 0:
+      if hasattr(hit.meta, "highlight"):
+        if hasattr(hit.meta.highlight, "title"):
+          title = hit.meta.highlight.title[0]
+        if hasattr(hit.meta.highlight, "description"):
+          description = hit.meta.highlight.description[0]
+        if hasattr(hit.meta.highlight, "data_time"):
+          data_time = hit.meta.highlight.data_time[0]
+        if hasattr(hit.meta.highlight, "source"):
+          source = hit.meta.highlight.source[0]
+
     hit_list.append({
       'id': str(hit.id),
-      'title': hit.title,
-      'description': hit.description,
-      'source': hit.source,
-      'data_time': hit.data_time,
+      'title': title,
+      'description': description,
+      'source': source,
+      'data_time': data_time,
       'publish_time': dateFormat(hit.publish_time),
       'readhot': hit.readhot,
       'downloads': hit.downloads
