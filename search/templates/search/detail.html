@@ -48,7 +48,7 @@
       <div class="row">
         <div class="col">
           <h5>该数据来源于以下数据包</h5>
-          <a href='/index/item/{{ ref_id }}' target="_blank">{{ ref_id_title }}</a>
+          <a href='/item/{{ ref_id }}' target="_blank">{{ ref_id_title }}</a>
         </div>
         <div class="col"></div>
         <div class="col"></div>
@@ -63,7 +63,7 @@
         {% for recommend in recommends %}
         <div>
           <img src="http://via.placeholder.com/150x150"><br>
-          <a href="/index/item/{{ recommend.id }}" target="_blank" title="{{recommend.title}}">{{recommend.title}}</a>
+          <a href="/item/{{ recommend.id }}" target="_blank" title="{{recommend.title}}">{{recommend.title}}</a>
         </div>
         {% endfor %}
       </div>
