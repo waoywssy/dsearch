@@ -3,9 +3,6 @@ $(function() {
   var currentPage = 1;
   var order_by_latest = 1; // 1: order by latest published; 0: order by readhot
 
-  // var full_filter_dataset = [];
-  // var full_filter_dataset_map = {};
-  var page_first_loaded = true;
   var last_keyword = '';
 
   var expandStatus = []; // holding tree-nodes expanding status
@@ -21,15 +18,20 @@ $(function() {
       event.preventDefault();
 
       resetPage();
-      doSearch();
+      doSearch(true);
     }
   });
 
   // search-on-click trigger method
   $('#search').bind('click', function() {
       resetPage();
-      doSearch();
+      doSearch(true);
   });
+
+  // stop events bubbling
+  function stopHandler(event) {
+      window.event ? window.event.cancelBubble=true : event.stopPropagation();  
+  }
 
   // bind the tabs to switch sorting order
   $('a[data-toggle="pill"]').on('shown.bs.tab', function (e) {
@@ -55,24 +57,25 @@ $(function() {
       checkboxes: true
   });
 
+  tree.on('onUpdate', function (e, $node, record, state) {
+     doSearch();
+  });
+
   // the search method 
-  function doSearch(first_executed) {
+  function doSearch(searchAll) {
     $('#div-list-latest-items li').remove();
     $('.loading').show();
 
     saveFilterStatus();
-
-    var k = $('#search-input').val().trim();
-    var filter_vals = (k == '' && last_keyword != '') ? '' : checkedNodes.join();
 
     $.ajax({
       type: "POST",
       url: "tree",
       dataType: 'json',
       data: { 
-        keyword: k,
+        keyword: $('#search-input').val().trim(),
         pageNo: currentPage,
-        filterList: filter_vals,
+        filterList: searchAll ? '' : checkedNodes.join(),
         orderby: order_by_latest
       }
     })
@@ -82,29 +85,12 @@ $(function() {
 
       if (r.code == 200){
         var list = r.data.list;
-        var filter = r.data.filter;
-
         // build the result list
         buildList(list);
 
-        if (page_first_loaded) {
-          
+        if (searchAll) {
           // build the tree filter
-          buildFilter(filter);
-
-          // the first time to load filters
-          page_first_loaded = false;
-          
-          tree.checkAll();
-
-        } else {
-          var keyword = $('#search-input').val().replace(/\s+/g, "");
-
-          if (last_keyword != keyword || $.trim(checkedNodes.join())=='') {
-            // build the tree filter
-            buildFilter(filter);
-            last_keyword = keyword;
-          } 
+          buildFilter(r.data.filter);
         }
 
         // rebuild the pagination according to the number of search results

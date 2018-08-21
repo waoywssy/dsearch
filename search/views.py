@@ -402,7 +402,8 @@ def getree(request):
       children.append({
         'key': ''.join([str(parent_index), "-", str(bucket.key), "-", str(child_index), "-", child.key]), 
         # 'text': child.key + '(' + str(child.doc_count) + ')',
-        'checked': child.doc_count > 0,
+        # 'checked': child.doc_count > 0,
+        'checked': False,
         'title': child.key,
         'count': child.doc_count
       })
