@@ -100,7 +100,7 @@ $(function() {
         } else {
           var keyword = $('#search-input').val().replace(/\s+/g, "");
 
-          if (last_keyword != keyword) {
+          if (last_keyword != keyword || $.trim(checkedNodes.join())=='') {
             // build the tree filter
             buildFilter(filter);
             last_keyword = keyword;
