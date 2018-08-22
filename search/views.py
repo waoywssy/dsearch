@@ -58,12 +58,11 @@ def item(request, id):
     }
   }
 
+  response = doSearch(body)
+
   # call method
   request = saveHistory(request, id)
 
-  response = doSearch(body)
-
-  
   # 获取推荐 id 测试
   suggestIds = getSuggestions(id, 3, 3)
   recommends = getRecommendedIdTitles(suggestIds)
@@ -88,7 +87,7 @@ def item(request, id):
       'source': hit.source, 
       'data_time': hit.data_time, 
       'publish_time': dateFormat(hit.publish_time), 
-      'readhot': hit.readhot,
+      'readhot': hit.readhot + 1,
       'downloads': hit.downloads,
       'ref_id': str(hit.ref_id), 
       'ref_id_title': ref_id_title,
