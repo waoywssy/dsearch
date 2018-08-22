@@ -58,11 +58,12 @@ def item(request, id):
     }
   }
 
-  response = doSearch(body)
-
   # call method
   request = saveHistory(request, id)
 
+  response = doSearch(body)
+
+  
   # 获取推荐 id 测试
   suggestIds = getSuggestions(id, 3, 3)
   recommends = getRecommendedIdTitles(suggestIds)
@@ -282,12 +283,12 @@ def getree(request):
         "query": keyword, 
         # "type": "best_fields", 
         "fields": [ 
-          "title", 
-          "description", 
-          "contents",
-          "keywords",
-          "industry",
-          "topic",
+          "title^4", 
+          "description^3", 
+          "contents^3",
+          "keyword^2",
+          "industry^2",
+          "topic^2",
           "source",
           "data_time"
         ], 
