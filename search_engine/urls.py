@@ -1,3 +1,5 @@
+#coding:utf-8
+
 """search_engine URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:

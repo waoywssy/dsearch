@@ -1,3 +1,5 @@
+#coding:utf-8
+
 """
 Django settings for search_engine project.
 
@@ -23,7 +25,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '5psslab%*mksqx4l7m(t-lxk-(wa&iy=4*6pgwq*#6p7zpw$z8'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 if DEBUG is False:
     ALLOWED_HOSTS = [
@@ -35,7 +37,6 @@ if DEBUG is False:
 if DEBUG is True:
     ALLOWED_HOSTS = [
     'localhost',
-    '120d2eda.ngrok.io',
     '*'
     ]
 
@@ -87,15 +88,18 @@ WSGI_APPLICATION = 'search_engine.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-#     }
-# }
-
 # 部署时应修改对应的配置
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'search',
+        'USER' : 'root',
+        'PASSWORD' : 'Test@set123',
+        'HOST' : '127.0.0.1',
+        'PORT' : '3306',
+    }
+}
+"""
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -106,7 +110,7 @@ DATABASES = {
         'PORT' : '3306',
     }
 }
-
+"""
 
 
 # Password validation
@@ -145,7 +149,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "search/static"),
+]
 
 # set session validate time
 SESSION_SAVE_EVERY_REQUEST = True
@@ -153,7 +159,7 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 
 # global settings of the elasticsearch service
-ES_URL = 'http://localhost:9200'
+ES_URL = 'http://127.0.0.1:9200'
 ES_INDEX_NAME = 'datastore'
 ES_INDEX_TYPE = 'doc'
 
