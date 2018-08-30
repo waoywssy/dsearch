@@ -79,13 +79,13 @@ def getTree(keyword, pageNo, filterList, orderby_val):
             "multi_match": {
                 "query": keyword,
                 "fields": [
-                    "title",
-                    "description",
-                    "contents",
-                    "keywords",
-                    "industry",
-                    "topic",
-                    "source",
+                    "title^" + settings.ES_BOOST_TITLE,
+                    "description^" + settings.ES_BOOST_CONTENTS,
+                    "contents^" + settings.ES_BOOST_CONTENTS,
+                    "keywords^" + settings.ES_BOOST_INDUSTRY,
+                    "industry^" + settings.ES_BOOST_INDUSTRY,
+                    "topic^" + settings.ES_BOOST_BASE,
+                    "source^" + settings.ES_BOOST_BASE,
                     "data_time"
                     ],
                 }
