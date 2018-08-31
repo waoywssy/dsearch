@@ -88,6 +88,7 @@ def getTree(keyword, pageNo, filterList, orderby_val):
                     "source^" + settings.ES_BOOST_BASE,
                     "data_time"
                     ],
+                "tie_breaker": 0.3,
                 }
             }
     else:
@@ -103,11 +104,11 @@ def getTree(keyword, pageNo, filterList, orderby_val):
         "from": start_from,
         "size": 10,
         "sort": [
+            "_score",
             {orderby[orderby_val]: {
                 "order": "desc"
                 }
             },
-            "_score",
             "id"
         ],
         "aggs": {
@@ -136,8 +137,6 @@ def getTree(keyword, pageNo, filterList, orderby_val):
         }
     
     response = until.doSearch(body)
-    if not response:
-        return None
     
     # # by indicating extra(size=0), we can make it more effecient 
     # s = Search(using=client, index="search_engine_data").query("match_all").extra(size=10)
