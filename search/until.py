@@ -88,6 +88,7 @@ def getTree(keyword, pageNo, filterList, orderby_val):
                     "source^" + settings.ES_BOOST_BASE,
                     "data_time"
                     ],
+                "tie_breaker": 0.3,
                 }
             }
     else:
@@ -103,11 +104,11 @@ def getTree(keyword, pageNo, filterList, orderby_val):
         "from": start_from,
         "size": 10,
         "sort": [
+            "_score",
             {orderby[orderby_val]: {
                 "order": "desc"
                 }
             },
-            "_score",
             "id"
         ],
         "aggs": {
@@ -136,8 +137,6 @@ def getTree(keyword, pageNo, filterList, orderby_val):
         }
     
     response = until.doSearch(body)
-    if not response:
-        return None
     
     # # by indicating extra(size=0), we can make it more effecient 
     # s = Search(using=client, index="search_engine_data").query("match_all").extra(size=10)
@@ -281,9 +280,9 @@ class Until:
             return result
     
     # field - readhot/downloads
-    def updateFieldCount(self, es_id, field):
+    def updateFieldCount(self, meta_id, field):
         # url = 'http://127.0.0.1:9200/datastore/doc/8tiNEmUBw7RIvfsV9-Cj/_update'
-        url = '/'.join([settings.ES_URL, settings.ES_INDEX_NAME, settings.ES_INDEX_TYPE, es_id, '_update'])
+        url = '/'.join([settings.ES_URL, settings.ES_INDEX_NAME, settings.ES_INDEX_TYPE, meta_id, '_update'])
         data = {
             "script": {
                 "inline": "ctx._source." + field +" += 1"
@@ -335,20 +334,6 @@ class Until:
                 return hit_list
         # no match
         return []
-    
-    def makeUpFilterList(self, filterList):
-        # "1-传播,1-传播-1-媒体,1-传播-2-媒体测试,2-商业-1-贸易,3-民生,3-民生-1-社保,3-民生-2-社保测试"
-        madeUpList = []
-        fList = str.split(',')
-        for item in fList:
-            arr = item.split('-')
-            
-            if len(arr) == 2:
-                madeUpList.append(item)
-            elif len(arr) == 4:
-                madeUpList.append(item)
-        
-        return filterList
     
     def getESQueryFromChecked(self, filterList, mustQuery):
         if len(filterList) == 0:

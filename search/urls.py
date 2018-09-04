@@ -26,7 +26,7 @@ handler404 = 'views.handler404'
 
 urlpatterns = [
     path('', sv.search, name='base'),	         # 
-    path('item/<int:id>/', sv.item, name='id'),  # 添加item/docid，作为详情访问目录
+    path('item/<int:itemId>/', sv.item, name='id'),  # 添加item/docid，作为详情访问目录
     path('tree', sv.getree),	                 # 添加tree，作为filter数据访问目录
     path('update', sv.update),                   # 添加update
 ]
