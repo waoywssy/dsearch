@@ -25,7 +25,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '5psslab%*mksqx4l7m(t-lxk-(wa&iy=4*6pgwq*#6p7zpw$z8'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 if DEBUG is False:
     ALLOWED_HOSTS = [
@@ -89,17 +89,16 @@ WSGI_APPLICATION = 'search_engine.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 # 部署时应修改对应的配置
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'search',
-        'USER' : 'root',
-        'PASSWORD' : 'Test@set123',
-        'HOST' : '127.0.0.1',
-        'PORT' : '3306',
-    }
-}
-"""
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'search',
+#         'USER' : 'root',
+#         'PASSWORD' : 'Test@set123',
+#         'HOST' : '127.0.0.1',
+#         'PORT' : '3306',
+#     }
+# }
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -110,7 +109,6 @@ DATABASES = {
         'PORT' : '3306',
     }
 }
-"""
 
 
 # Password validation
