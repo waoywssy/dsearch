@@ -61,7 +61,7 @@ def getItem(itemId):
 
 # the search API, handle the search request
 # and get the filter tree 
-def getTree(keyword, pageNo, filterList, orderby_val):
+def getTree(keyword, pageNo, filterList, filterListDT, orderby_val):
     until = Until()
     orderby = ["readhot", "publish_time"]
     
@@ -70,7 +70,7 @@ def getTree(keyword, pageNo, filterList, orderby_val):
     if pageNo > settings.MAX_RESULTS_PAGES_DISPLAYED:
         pageNo = settings.MAX_RESULTS_PAGES_DISPLAYED
     
-    start_from = (int(pageNo) - 1) * 10;
+    start_from = (int(pageNo) - 1) * 10
     
     query = {}
     if len(keyword.strip()) > 0:
@@ -97,7 +97,12 @@ def getTree(keyword, pageNo, filterList, orderby_val):
             "match_all": {}
             }
     
-    boolBody = until.getESQueryFromChecked(filterList, query)
+    # There are just two values: xsls and pdf, only the case that 
+    # one of them was set needs to be handled
+    if "," in filterListDT:
+        filterListDT = ''
+
+    boolBody = until.getESQueryFromChecked(filterList, filterListDT, query)
     
     body = {
         "query": boolBody,
@@ -128,14 +133,24 @@ def getTree(keyword, pageNo, filterList, orderby_val):
                             "size": 999,
                             "order": {
                                 "_key": "asc"
-                                }
                             }
                         }
                     }
                 }
+            },
+            "by_data_type": {
+                "terms": {
+                    "field": "file_type.keyword", 
+                    "size": 999,
+                    "min_doc_count": 0,
+                    "order": {
+                        "_key": "asc"
+                    }
+                }
             }
         }
-    
+    }
+    print(boolBody)
     response = until.doSearch(body)
     
     # # by indicating extra(size=0), we can make it more effecient 
@@ -201,6 +216,17 @@ def getTree(keyword, pageNo, filterList, orderby_val):
             'hasChildren':len(children) > 0,
             'children': children
             })
+
+    data_type_list = []
+    # for bucket in response.aggs.bucket:
+    for bucket in response.aggregations.by_data_type.buckets:
+        # parents nodes
+        data_type_list.append({
+            'key': bucket.key, 
+            'count': bucket.doc_count,
+            'title': getDataTypeText(bucket.key),
+            'expand': False
+            })
     
     list_total = response.hits.total
     # if list_total > settings.MAX_RESULTS_PAGES_DISPLAYED:
@@ -214,6 +240,7 @@ def getTree(keyword, pageNo, filterList, orderby_val):
         'took': response.took,
         'data': {
             'filter': group_list,
+            'filter_dt': data_type_list,
             'list': {
                 'data': hit_list,
                 'total': list_total
@@ -222,6 +249,11 @@ def getTree(keyword, pageNo, filterList, orderby_val):
         }
     
     return responseData
+
+def getDataTypeText(key):
+    if key == 'xlsx':
+        return '数据'
+    return '数据报告'
 
 def updateDownload(meta_id, itemId):
     if meta_id:
@@ -335,58 +367,74 @@ class Until:
         # no match
         return []
     
-    def getESQueryFromChecked(self, filterList, mustQuery):
-        if len(filterList) == 0:
+    def getESQueryFromChecked(self, filterList, filterListDT, mustQuery):
+        if len(filterList) == 0 and len(filterListDT) == 0:
             return {
                 "bool": {
                     "must": mustQuery
                     }
                 }
-        
-        # "1-传播,1-传播-1-媒体,1-传播-2-媒体测试,2-商业,2-商业-1-贸易,3-民生,3-民生-1-社保,3-民生-2-社保测试"
-        filterStr = self.formatFilterList(filterList)
-        fList = filterStr.split(',')
-        should = []
-        must = []
-        industry_should = []
-        for item in fList:
-            arr = item.split('-')
+
+        should, must, industry_should = [], [], []
+        if len(filterList) > 0:
+            # "1-传播,1-传播-1-媒体,1-传播-2-媒体测试,2-商业,2-商业-1-贸易,3-民生,3-民生-1-社保,3-民生-2-社保测试"
+            filterStr = self.formatFilterList(filterList)
+            fList = filterStr.split(',')
             
-            if len(arr) == 2:
-                if len(must) > 0:
-                    should.append({
-                        "bool": {
-                            "must": must,
-                            "should": industry_should,
-                            "minimum_should_match": 1
+            for item in fList:
+                arr = item.split('-')
+                
+                if len(arr) == 2:
+                    if len(must) > 0:
+                        should.append({
+                            "bool": {
+                                "must": must,
+                                "should": industry_should,
+                                "minimum_should_match": 1
+                                }
+                            })
+                    must, industry_should = [], []
+                    must.append({
+                        "term": {
+                            "domain" : arr[1]
                             }
                         })
-                must = []
-                industry_should = []
-                must.append({
-                    "term": {
-                        "domain" : arr[1]
-                        }
-                    })
-            elif len(arr) == 4:
-                industry_should.append({
-                    "term": {
-                        "industry" : arr[3]
-                        }
-                    })
-        should.append({
-            "bool": {
-                "must": must,
-                "should": industry_should ,
-                "minimum_should_match": 1
+                elif len(arr) == 4:
+                    industry_should.append({
+                        "term": {
+                            "industry" : arr[3]
+                            }
+                        })
+            should.append({
+                "bool": {
+                    "must": must,
+                    "should": industry_should ,
+                    "minimum_should_match": 1
+                    }
+                })
+
+            if len(filterListDT) > 0:
+                should.append(Until().getFilterDTConditionObject(filterListDT))
+            return {
+                "bool": {
+                    "must": mustQuery,
+                    "should": should,
+                    "minimum_should_match": 1
+                    }
                 }
-            })
-        
+        else:
+            if len(filterListDT) > 0:
+                return Until().getFilterDTConditionObject(filterListDT)
+                
+    def getFilterDTConditionObject(self, filterListDT):
         return {
             "bool": {
-                "must": mustQuery,
-                "should": should,
-                "minimum_should_match": 1
+                "must": {"term": {
+                    "file_type" : filterListDT
+                    }
+                }
+                # ,
+                # "minimum_should_match": 1
                 }
             }
     

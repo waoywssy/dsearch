@@ -1,4 +1,8 @@
 $(function() {
+  var MAX_PAGE_NUM = 1000;
+  var ITEMS_PER_PAGE = 10;
+  var ENTER_KEY_CODE = 13;
+  var HTTP_STATUS_OK = 200;
 
   var currentPage = 1;
   var order_by_latest = 1; // 1: order by latest published; 0: order by readhot
@@ -7,6 +11,7 @@ $(function() {
 
   var expandStatus = []; // holding tree-nodes expanding status
   var checkedNodes = []; // holding tree-nodes checked status
+  var checkedNodesDT = []; // holding data type tree-nodes checked status
 
   function resetPage() {
     currentPage = 1;
@@ -14,7 +19,7 @@ $(function() {
 
   // search-on-enter trigger method
   $('#search-input').keydown(function(event) {
-    if (event.which == 13) {
+    if (event.which == ENTER_KEY_CODE) {
       event.preventDefault();
 
       resetPage();
@@ -35,30 +40,21 @@ $(function() {
 
   // bind the tabs to switch sorting order
   $('a[data-toggle="pill"]').on('shown.bs.tab', function (e) {
-    var target = $(e.target).attr("id") // activated tab
+    var target = $(e.target).attr("id"); // activated tab
     order_by_latest = (target == 'tab-latest') + 0;
 
     doSearch();
   });
 
   // build the tree filter but datasource
-  var tree = $('#tree').tree({
-      primaryKey: 'key', // indicating which filed will be collected in method tree.getCheckedNodes()
-      uiLibrary: 'bootstrap',
-      iconsLibrary: 'fontawesome',
-      hasChildrenField: 'hasChildren',
-      autoLoad: false,
-      lazyLoading: true,
-      icons: {
-        expand: '<i class="fa fa-angle-down"></i>',
-        collapse: '<i class="fa fa-angle-up"></i>',
-      },
-      dataSource: [],
-      checkboxes: true
-  });
-
+  var tree = _init_tree("tree");
   tree.on('onUpdate', function (e, $node, record, state) {
      doSearch();
+  });
+
+  var tree_data_type = _init_tree("tree-data-type");
+  tree_data_type.on('onUpdate', function (e, $node, record, state) {
+    doSearch();
   });
 
   // the search method 
@@ -66,7 +62,7 @@ $(function() {
     $('#div-list-latest-items li').remove();
     $('.loading').show();
 
-    saveFilterStatus();
+    _saveFilterStatus();
 
     $.ajax({
       type: "POST",
@@ -76,6 +72,7 @@ $(function() {
         keyword: $('#search-input').val().trim(),
         pageNo: currentPage,
         filterList: searchAll ? '' : checkedNodes.join(),
+        filterListDT: searchAll ? '' : checkedNodesDT.join(),
         orderby: order_by_latest
       }
     })
@@ -83,19 +80,21 @@ $(function() {
 
       $('.loading').hide();
 
-      if (r.code == 200){
+      if (r.code == HTTP_STATUS_OK){
         var list = r.data.list;
         // build the result list
         buildList(list);
 
         if (searchAll) {
+        // if (true){
           // build the tree filter
-          buildFilter(r.data.filter);
+          buildFilter(tree, r.data.filter);
+          buildFilter(tree_data_type, r.data.filter_dt);
         }
 
         // rebuild the pagination according to the number of search results
-        var pages = Math.ceil(list.total / 10);
-        pages = pages > 1000 ? 1000 : pages;
+        var pages = Math.ceil(list.total / ITEMS_PER_PAGE);
+        pages = pages > MAX_PAGE_NUM ? MAX_PAGE_NUM : pages;
 
         $pagination.twbsPagination('destroy');
         if (pages > 0) {
@@ -133,11 +132,15 @@ $(function() {
   // overriding the default template delimiter in case of 
   // the confliction with django template deliveters
   $.views.settings.delimiters("<%", "%>");
+
+  // do the initial empty-keyword-search on page load
+  doSearch(true);
+  
   // build the result list 
   function buildList(list) {
     $('#result-number').text(list.total);
 
-    if (list.total <= 10){
+    if (list.total <= ITEMS_PER_PAGE){
       resetPage();
     }
 
@@ -146,24 +149,23 @@ $(function() {
   }
 
   // build the tree-filter
-  function buildFilter(filter) {
+  function buildFilter(tree, filter) {
     filter = setFilterTreeText(filter, false);
-
     tree.render(filter);
 
-    restoreFilterStatus();
+    _restoreFilterStatus();
   }
 
   function setFilterTreeText(filter, useZero) {
     // display the checkbox label text with count
     for (var i = filter.length - 1; i >= 0; i--) {
-      filter[i].text = getNodeText(filter[i], useZero);
+      filter[i].text = _getNodeText(filter[i], useZero);
 
       if (filter[i].hasChildren) {
         var nodes = filter[i].children;
         if (nodes) {
           for (var j = nodes.length - 1; j >= 0; j--) {
-            nodes[j].text = getNodeText(nodes[j], useZero);
+            nodes[j].text = _getNodeText(nodes[j], useZero);
           }
         }
       }
@@ -171,11 +173,11 @@ $(function() {
     return filter;
   }
 
-  function getNodeText(node, useZero){
+  function _getNodeText(node, useZero){
     return node.title + "(" + (useZero ? "0" : node.count)  + ")";
   }
 
-  function saveFilterStatus() {
+  function _saveFilterStatus() {
     // save the current expanding status, so it can be restored after ajax call
     $('#tree > ul > .list-group-item > div > span[data-role="expander"]').each(
       function(index){
@@ -186,9 +188,10 @@ $(function() {
 
     // get the current checked nodes
     checkedNodes = tree.getCheckedNodes();
+    checkedNodesDT = tree_data_type.getCheckedNodes();
   }
 
-  function restoreFilterStatus() {
+  function _restoreFilterStatus() {
     // expanding level one nodes
     for (var k in expandStatus){
       if (expandStatus.hasOwnProperty(k)) {
@@ -199,8 +202,21 @@ $(function() {
     }
   }
 
-  // do the initial empty-keyword-search on page load
-  doSearch(true);
-
-  // $("#publish_time").html($("#publish_time").text().replace("Z","").replace("T"," "))
+  function _init_tree(tree_id, params){
+    // build the tree filter but datasource
+    return $('#' + tree_id).tree({
+      primaryKey: 'key', // indicating which filed will be collected in method tree.getCheckedNodes()
+      uiLibrary: 'bootstrap',
+      iconsLibrary: 'fontawesome',
+      hasChildrenField: 'hasChildren',
+      autoLoad: false,
+      lazyLoading: true,
+      icons: {
+        expand: '<i class="fa fa-angle-down"></i>',
+        collapse: '<i class="fa fa-angle-up"></i>',
+      },
+      dataSource: [],
+      checkboxes: true
+    });
+  }
 });

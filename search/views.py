@@ -30,8 +30,9 @@ def getree(request):
     keyword = request.POST.get('keyword', '')
     pageNo = request.POST.get('pageNo', '')
     filterList = request.POST.get('filterList', '')
+    filterListDT = request.POST.get('filterListDT', '')
     orderby_val = int(request.POST.get('orderby', ''))
-    responseData = getTree(keyword, pageNo, filterList, orderby_val)
+    responseData = getTree(keyword, pageNo, filterList, filterListDT, orderby_val)
     if not responseData:
         raise Http404("Got exception in search.")
     return JsonResponse(responseData)
