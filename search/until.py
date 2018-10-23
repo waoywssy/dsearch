@@ -123,7 +123,7 @@ def getTree(keyword, pageNo, filterList, filterListDT, orderby_val):
                     "size": settings.ES_AGG_MAX_RESULTS,
                     "min_doc_count":0,
                     "order": {
-                        "_key": "asc"
+                        "_count": "desc"
                     }
                 },
                 "aggs": {
@@ -132,7 +132,7 @@ def getTree(keyword, pageNo, filterList, filterListDT, orderby_val):
                             "field": "industry.keyword",
                             "size": settings.ES_AGG_MAX_RESULTS,
                             "order": {
-                                "_key": "asc"
+                                "_count": "desc"
                             }
                         }
                     }
@@ -150,7 +150,7 @@ def getTree(keyword, pageNo, filterList, filterListDT, orderby_val):
             }
         }
     }
-    print(boolBody)
+    # print(boolBody)
     response = until.doSearch(body)
     
     # # by indicating extra(size=0), we can make it more effecient 

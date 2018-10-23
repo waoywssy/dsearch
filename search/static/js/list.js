@@ -4,6 +4,15 @@ $(function() {
   var ENTER_KEY_CODE = 13;
   var HTTP_STATUS_OK = 200;
 
+  var TOP_CATEGORY_WEIGHT = {
+    '政治经济':0,
+    '社会民生':5,
+    '生产能源':10,
+    '科学技术':15,
+    '教育文化':20,
+    '国际交流':25,
+  };
+
   var currentPage = 1;
   var order_by_latest = 1; // 1: order by latest published; 0: order by readhot
 
@@ -160,6 +169,22 @@ $(function() {
 
   // build the tree-filter
   function buildFilter(tree, filter) {
+    // calculate top levevl category weight
+    for (var i = 0; i < filter.length; i++){
+      var weight = TOP_CATEGORY_WEIGHT[filter[i].title];
+      weight = weight >= 0 ? weight: 9999;
+      filter[i].weight = weight;
+    }
+    // sort filter by top level category weight
+    filter.sort(function(a, b){
+      var keyA = a.weight,
+          keyB = b.weight;
+      // Compare the 2 titles
+      if(keyA < keyB) return -1;
+      if(keyA > keyB) return 1;
+      return 0;
+    });
+
     filter = setFilterTreeText(filter, false);
     tree.render(filter);
 
@@ -202,11 +227,13 @@ $(function() {
   }
 
   function _restoreFilterStatus() {
-    // expanding level one nodes
-    for (var k in expandStatus){
-      if (expandStatus.hasOwnProperty(k)) {
-        if (expandStatus[k]){
-          tree.expand(tree.getNodeById(k));
+    if (expandStatus){
+      // expanding level one nodes
+      for (var k in expandStatus){
+        if (expandStatus.hasOwnProperty(k)) {
+          if (expandStatus[k]){
+            tree.expand(tree.getNodeById(k));
+          }
         }
       }
     }
