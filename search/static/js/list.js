@@ -13,6 +13,8 @@ $(function() {
   var checkedNodes = []; // holding tree-nodes checked status
   var checkedNodesDT = []; // holding data type tree-nodes checked status
 
+  var last_checked_tree = null;
+
   function resetPage() {
     currentPage = 1;
   }
@@ -49,11 +51,13 @@ $(function() {
   // build the tree filter but datasource
   var tree = _init_tree("tree");
   tree.on('onUpdate', function (e, $node, record, state) {
+    last_checked_tree = tree;
      doSearch();
   });
 
   var tree_data_type = _init_tree("tree-data-type");
   tree_data_type.on('onUpdate', function (e, $node, record, state) {
+    last_checked_tree = tree_data_type;
     doSearch();
   });
 
@@ -90,6 +94,12 @@ $(function() {
           // build the tree filter
           buildFilter(tree, r.data.filter);
           buildFilter(tree_data_type, r.data.filter_dt);
+        } else {
+          if (last_checked_tree == tree){
+            buildFilter(tree_data_type, r.data.filter_dt);
+          } else {
+            buildFilter(tree, r.data.filter);
+          }
         }
 
         // rebuild the pagination according to the number of search results

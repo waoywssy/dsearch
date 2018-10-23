@@ -70,8 +70,13 @@ def getTree(keyword, pageNo, filterList, filterListDT, orderby_val):
     if pageNo > settings.MAX_RESULTS_PAGES_DISPLAYED:
         pageNo = settings.MAX_RESULTS_PAGES_DISPLAYED
     
-    start_from = (int(pageNo) - 1) * 10
-    
+    start_from = (int(pageNo) - 1) * settings.ES_ITEMS_PER_PAGE
+
+    # There are just two values: xsls and pdf, only the case that 
+    # one of them was set needs to be handled
+    if "," in filterListDT:
+        filterListDT = ''
+
     query = {}
     if len(keyword.strip()) > 0:
         # query for keywords
@@ -88,26 +93,21 @@ def getTree(keyword, pageNo, filterList, filterListDT, orderby_val):
                     "source^" + settings.ES_BOOST_BASE,
                     "data_time"
                     ],
-                "tie_breaker": 0.3,
+                "tie_breaker": settings.ES_TIE_BREAKER,
                 }
             }
     else:
         # query for all the list 
         query = {
             "match_all": {}
-            }
-    
-    # There are just two values: xsls and pdf, only the case that 
-    # one of them was set needs to be handled
-    if "," in filterListDT:
-        filterListDT = ''
+        }
 
     boolBody = until.getESQueryFromChecked(filterList, filterListDT, query)
     
     body = {
         "query": boolBody,
         "from": start_from,
-        "size": 10,
+        "size": settings.ES_ITEMS_PER_PAGE,
         "sort": [
             "_score",
             {orderby[orderby_val]: {
@@ -120,7 +120,7 @@ def getTree(keyword, pageNo, filterList, filterListDT, orderby_val):
             "by_domain_industry": {
                 "terms": {
                     "field": "domain.keyword",
-                    "size": 999,
+                    "size": settings.ES_AGG_MAX_RESULTS,
                     "min_doc_count":0,
                     "order": {
                         "_key": "asc"
@@ -130,7 +130,7 @@ def getTree(keyword, pageNo, filterList, filterListDT, orderby_val):
                     "industry_stats": {
                         "terms": {
                             "field": "industry.keyword",
-                            "size": 999,
+                            "size": settings.ES_AGG_MAX_RESULTS,
                             "order": {
                                 "_key": "asc"
                             }
@@ -141,7 +141,7 @@ def getTree(keyword, pageNo, filterList, filterListDT, orderby_val):
             "by_data_type": {
                 "terms": {
                     "field": "file_type.keyword", 
-                    "size": 999,
+                    "size": settings.ES_AGG_MAX_RESULTS,
                     "min_doc_count": 0,
                     "order": {
                         "_key": "asc"
@@ -190,7 +190,7 @@ def getTree(keyword, pageNo, filterList, filterListDT, orderby_val):
             'publish_time': until.dateFormat(hit.publish_time),
             'readhot': hit.readhot,
             'downloads': hit.downloads
-            })
+        })
     
     group_list = []
     parent_index = 0
@@ -205,17 +205,17 @@ def getTree(keyword, pageNo, filterList, filterListDT, orderby_val):
                 'key': ''.join([str(parent_index), "-", str(bucket.key), "-", str(child_index), "-", child.key]), 
                 'checked': False,
                 'title': child.key,
-                'count': child.doc_count
+                'count': noMoreThan50(child.doc_count)
             })
         # parents nodes
         group_list.append({
             'key': ''.join([str(parent_index), "-", bucket.key]), 
-            'count': bucket.doc_count,
+            'count': noMoreThan50(bucket.doc_count),
             'title': bucket.key,
             'expand': False,
             'hasChildren':len(children) > 0,
             'children': children
-            })
+        })
 
     data_type_list = []
     # for bucket in response.aggs.bucket:
@@ -223,14 +223,12 @@ def getTree(keyword, pageNo, filterList, filterListDT, orderby_val):
         # parents nodes
         data_type_list.append({
             'key': bucket.key, 
-            'count': bucket.doc_count,
+            'count': noMoreThan50(bucket.doc_count),
             'title': getDataTypeText(bucket.key),
             'expand': False
             })
     
     list_total = response.hits.total
-    # if list_total > settings.MAX_RESULTS_PAGES_DISPLAYED:
-    #    list_total = settings.MAX_RESULTS_PAGES_DISPLAYED
     
     responseData = {
         'code': 200,
@@ -247,8 +245,12 @@ def getTree(keyword, pageNo, filterList, filterListDT, orderby_val):
                 }
             }
         }
-    
     return responseData
+
+def noMoreThan50(num):
+    # if num > 50:
+    #     return '50+'
+    return num
 
 def getDataTypeText(key):
     if key == 'xlsx':
@@ -281,7 +283,6 @@ def updateDownload(meta_id, itemId):
     
 
 class Until:
-    
     def doSearch(self, body):
         try:
             client = connections.create_connection(hosts=[settings.ES_URL])
@@ -377,13 +378,13 @@ class Until:
 
         should, must, industry_should = [], [], []
         if len(filterList) > 0:
+            
             # "1-传播,1-传播-1-媒体,1-传播-2-媒体测试,2-商业,2-商业-1-贸易,3-民生,3-民生-1-社保,3-民生-2-社保测试"
             filterStr = self.formatFilterList(filterList)
             fList = filterStr.split(',')
             
             for item in fList:
                 arr = item.split('-')
-                
                 if len(arr) == 2:
                     if len(must) > 0:
                         should.append({
@@ -408,23 +409,35 @@ class Until:
             should.append({
                 "bool": {
                     "must": must,
-                    "should": industry_should ,
+                    "should": industry_should,
                     "minimum_should_match": 1
                     }
                 })
-
             if len(filterListDT) > 0:
-                should.append(Until().getFilterDTConditionObject(filterListDT))
-            return {
-                "bool": {
-                    "must": mustQuery,
-                    "should": should,
-                    "minimum_should_match": 1
+                return {
+                    "bool": {
+                        "must": mustQuery,
+                        "filter": {"term": {"file_type": filterListDT}},
+                        "should": should,
+                        "minimum_should_match": 1
+                        }
                     }
-                }
+            else:
+                return {
+                    "bool": {
+                        "must": mustQuery,
+                        "should": should,
+                        "minimum_should_match": 1
+                        }
+                    }
         else:
             if len(filterListDT) > 0:
-                return Until().getFilterDTConditionObject(filterListDT)
+                return {
+                    "bool": {
+                        "must": mustQuery,
+                        "filter": {"term": {"file_type": filterListDT}}
+                        }
+                    }
                 
     def getFilterDTConditionObject(self, filterListDT):
         return {
@@ -433,10 +446,8 @@ class Until:
                     "file_type" : filterListDT
                     }
                 }
-                # ,
-                # "minimum_should_match": 1
-                }
             }
+        }
     
     def formatFilterList(self, filterList):
         # "1-传播,1-传播-1-媒体,1-传播-2-媒体测试,2-商业-1-贸易,3-民生,3-民生-1-社保,3-民生-2-社保测试"
@@ -447,7 +458,6 @@ class Until:
         currentDomain = ''
         index = 0
         for item in fList:
-            # print(item)
             arr = item.split('-')
             if len(arr) == 4:
                 if index == 0:
