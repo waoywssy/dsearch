@@ -90,7 +90,6 @@ $(function() {
       }
     })
     .done(function(r) {
-
       $('.loading').hide();
 
       if (r.code == HTTP_STATUS_OK){

@@ -82,12 +82,17 @@ class History:
                 # print(selectedId.__str__() + ' is not in idList')
                 # 遍历存储容器中已保存的所有 id 
                 for savedId in idList:
+					# 判断 savedId 和 selectedId 的大小, 使得存储的时候 firstId 始终小于 secondId
+                    tempId = selectedId
+                    if (savedId > selectedId):
+                        tempId = savedId
+                        savedId = selectedId
                     try:
-                        # 交叉判断 savedId 和 id 分别为 firstId 和 secondId 时的情况, 将任何满足条件的数据库记录取出
-                        savedHistory = Histories.objects.get(Q(firstId=savedId, secondId=selectedId)|Q(firstId=selectedId, secondId=savedId))
+                        # 判断 savedId 和 selectedId 分别为 firstId 和 secondId 时的情况, 将任何满足条件的数据库记录取出
+                        savedHistory = Histories.objects.get(firstId=savedId, secondId=tempId)
                     except Exception:
                         # 如果未能查找到相关记录, 将视为这是一个新的关联组合, 创建并将其存入数据库
-                        history = Histories(firstId=savedId, secondId=selectedId, count=1)
+                        history = Histories(firstId=savedId, secondId=tempId, count=1)
                         history.save()
                     else:
                         # 将获取到的数据库记录统计加1, 更新这条记录

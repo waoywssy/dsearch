@@ -5,21 +5,13 @@ from django.utils.dateparse import parse_datetime
 from elasticsearch_dsl import Search
 from elasticsearch_dsl.connections import connections
 from search.suggestion import getSuggestions, countDownloads
-import requests, json 
+import requests, json, re
 
 
 # Render the search-result detail page
 def getItem(itemId):
-    # handle id here
-    # TODO 
-    body = {
-        "query": {
-            "term": {
-                "id": itemId
-                }
-            }
-        }
-    
+    body = { "query": { "term": { "id": itemId } } }
+
     until = Until()
     response = until.doSearch(body)
     
@@ -33,7 +25,7 @@ def getItem(itemId):
         
         # 获取推荐的 itemId 集合
         suggestIds = getSuggestions(itemId, 5, 3)
-        recommends = until.getRecommendedIdTitles(suggestIds)
+        recommends = until.getRecommendedIdTitles(itemId, suggestIds, hit.keywords)
         
         params = {
             'id': str(hit.id),
@@ -63,7 +55,7 @@ def getItem(itemId):
 # and get the filter tree 
 def getTree(keyword, pageNo, filterList, filterListDT, orderby_val):
     until = Until()
-    orderby = ["readhot", "publish_time"]
+    orderby = ["hw_weight", "publish_time"] # by hotest
     
     pageNo = int(pageNo)
     # display no more than 10000 results
@@ -104,18 +96,20 @@ def getTree(keyword, pageNo, filterList, filterListDT, orderby_val):
 
     boolBody = until.getESQueryFromChecked(filterList, filterListDT, query)
     
+    # the sort-by criteria
+    isOnTop = len(keyword.strip()) == 0 and len(filterList) == 0 and len(filterListDT) == 0
+    sort = ["_score",
+            { orderby[orderby_val]: { "order": "desc" }}, 
+            "id"]
+    if isOnTop:
+        sort.insert(0, { "td_value": { "order": "desc" } })
+
+    # the query body
     body = {
         "query": boolBody,
         "from": start_from,
         "size": settings.ES_ITEMS_PER_PAGE,
-        "sort": [
-            "_score",
-            {orderby[orderby_val]: {
-                "order": "desc"
-                }
-            },
-            "id"
-        ],
+        "sort": sort,
         "aggs": {
             "by_domain_industry": {
                 "terms": {
@@ -150,7 +144,7 @@ def getTree(keyword, pageNo, filterList, filterListDT, orderby_val):
             }
         }
     }
-    # print(boolBody)
+
     response = until.doSearch(body)
     
     # # by indicating extra(size=0), we can make it more effecient 
@@ -189,7 +183,8 @@ def getTree(keyword, pageNo, filterList, filterListDT, orderby_val):
             'data_time': data_time,
             'publish_time': until.dateFormat(hit.publish_time),
             'readhot': hit.readhot,
-            'downloads': hit.downloads
+            'downloads': hit.downloads,
+            'td_value': hit.td_value
         })
     
     group_list = []
@@ -248,8 +243,8 @@ def getTree(keyword, pageNo, filterList, filterListDT, orderby_val):
     return responseData
 
 def noMoreThan50(num):
-    # if num > 50:
-    #     return '50+'
+    if num > 50:
+        return '50+'
     return num
 
 def getDataTypeText(key):
@@ -345,8 +340,12 @@ class Until:
         else:
             return ''
     
+    """
+    getRecommendedIdTitles(self, itemId, ids, hit_keywords)
     # get what other users viewed 
-    def getRecommendedIdTitles(self, ids):
+    """
+    def getRecommendedIdTitles(self, itemId, ids, hit_keywords):
+        hit_list = []
         if ids and len(ids) > 0:
             body = {
                 "query": {
@@ -358,15 +357,40 @@ class Until:
             response = self.doSearch(body)
             
             if response and len(response.hits) > 0:
-                hit_list = []
                 for hit in response.hits:
                     hit_list.append({
                         'id': str(hit.id),
                         'title': hit.title
                     })
+
+        hit_list_len = len(hit_list)
+        if  hit_list_len < settings.TOTAL_RECCOMMENDATION_ITEMS_COUNT:
+            # if there are not enough recommendation records, choose from records which 
+            # match the record's 'keywords' most
+            body = {
+                "query": {
+                    "match": {
+                        "keywords" : ' '.join(re.split(r'[,，;；]', hit_keywords))
+                    }
+                }
+            }
+
+            response = self.doSearch(body)
+            
+            ids.append(itemId)
+            if response and len(response.hits) > 0:
+                for hit in response.hits:
+                    if (hit.id not in ids) and (hit_list_len < settings.TOTAL_RECCOMMENDATION_ITEMS_COUNT):
+                        hit_list_len += 1
+                        hit_list.append({
+                            'id': str(hit.id),
+                            'title': hit.title
+                        })
+                    else:
+                        break
                 return hit_list
         # no match
-        return []
+        return hit_list
     
     def getESQueryFromChecked(self, filterList, filterListDT, mustQuery):
         if len(filterList) == 0 and len(filterListDT) == 0:

@@ -170,7 +170,8 @@ ES_AGG_MAX_RESULTS = 999
 
 MAX_RESULTS_PAGES_DISPLAYED = 1000
 
-TOP_CATEGORY_ORDER =['政治经济','社会民生','生产能源','科学技术','教育文化','国际交流']
+TOTAL_RECCOMMENDATION_ITEMS_COUNT = 4
+# TOP_CATEGORY_ORDER =['政治经济','社会民生','生产能源','科学技术','教育文化','国际交流']
 
 
 
